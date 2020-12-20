@@ -2,11 +2,11 @@ import os
 import random
 from io import BytesIO
 
+from token import TOKEN
 import requests
 import telebot
 from PIL import Image
 
-TOKEN = "1497164627:AAGvgBe6zx0ThjTf8xNUYvQpQlp3WXpJFes"
 bot = telebot.TeleBot(TOKEN, parse_mode=None)
 state = dict()
 im_list = dict()
