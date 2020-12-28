@@ -6,7 +6,7 @@ import requests
 import telebot
 from PIL import Image
 
-from my_token import TOKEN
+TOKEN = os.environ["TOKEN"]
 
 bot = telebot.TeleBot(TOKEN, parse_mode=None)
 user_states = dict()
@@ -34,7 +34,7 @@ def send_welcome(message):
 
 
 @bot.message_handler(content_types=['photo'])
-def respond_photo(message):
+def photo_response(message):
     if check_idle(chat_id=message.chat.id):
         bot.reply_to(message, "You haven't started working yet! Send /new first.")
         return
@@ -51,15 +51,19 @@ def end(message):
     if check_idle(chat_id=message.chat.id):
         bot.reply_to(message, "You haven't started working yet! Send /new first.")
         return
-    if not user_photos:
+    if not user_photos[message.chat.id]:
         bot.reply_to(message, "You haven't sent any photos, but ok, ending now. Run /new to make another doc.")
+        user_states[message.chat.id] = "idle"
+        return
     bot.send_message(message.chat.id, "Sending a document with {0} photos.".format(len(user_photos[message.chat.id])))
     random.seed()
     docname = "res" + str(message.chat.id) + "r" + str(random.randint(a=0, b=1000)) + ".pdf"
+    # create and send pdf
     user_photos[message.chat.id][0].save(docname, "PDF", resolution=100.0, save_all=True,
                                          append_images=user_photos[message.chat.id][1:])
     send_doc(message.chat.id, docname)
     bot.send_message(message.chat.id, "Done! Run /new to make another doc, or just leave.")
+    # cleanup
     user_states[message.chat.id] = "idle"
     for img in user_photos[message.chat.id]:
         img.close()
