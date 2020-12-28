@@ -80,6 +80,6 @@ def send_doc(chat_id, doc_path):
         bot.send_document(chat_id, doc)
 
 
-bot.delete_webhook()
+# bot.delete_webhook()
 # bot.set_webhook(url="https://pdf-tg-bot.herokuapp.com/")
 bot.polling()
