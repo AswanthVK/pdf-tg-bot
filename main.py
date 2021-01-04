@@ -121,7 +121,7 @@ context.load_cert_chain(WEBHOOK_SSL_CERT, WEBHOOK_SSL_PRIV)
 # Start aiohttp server
 web.run_app(
     app,
-    host=WEBHOOK_LISTEN,
+    host=WEBHOOK_HOST,
     port=WEBHOOK_PORT,
     ssl_context=context,
 )
