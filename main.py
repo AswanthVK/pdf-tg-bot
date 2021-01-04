@@ -6,7 +6,7 @@ import requests
 import telebot
 from PIL import Image
 
-TOKEN = "1497164627:AAGvgBe6zx0ThjTf8xNUYvQpQlp3WXpJFes"
+TOKEN = os.environ["TOKEN"]
 
 bot = telebot.TeleBot(TOKEN, parse_mode=None)
 user_states = dict()
@@ -81,6 +81,5 @@ def send_doc(chat_id, doc_path):
 
 
 # bot.delete_webhook()
-#
 # bot.set_webhook(url="https://pdf-tg-bot.herokuapp.com/")
 bot.polling()
