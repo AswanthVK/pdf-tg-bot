@@ -1,16 +1,43 @@
 import os
 import random
+import ssl
 from io import BytesIO
+
 # from my_token import TOKEN
 import requests
 import telebot
 from PIL import Image
+from aiohttp import web
 
 TOKEN = os.environ["TOKEN"]
 
+WEBHOOK_HOST = 'https://pdf-tg-bot.herokuapp.com/'
+WEBHOOK_PORT = 8443  # 443, 80, 88 or 8443 (port need to be 'open')
+WEBHOOK_LISTEN = '0.0.0.0'  # In some VPS you may need to put here the IP addr
+
+WEBHOOK_SSL_CERT = './webhook_cert.pem'  # Path to the ssl certificate
+WEBHOOK_SSL_PRIV = './webhook_pkey.pem'  # Path to the ssl private key
+
+WEBHOOK_URL_BASE = "https://{}:{}".format(WEBHOOK_HOST, WEBHOOK_PORT)
+WEBHOOK_URL_PATH = "/{}/".format(TOKEN)
+
+app = web.Application()
 bot = telebot.TeleBot(TOKEN, parse_mode=None)
 user_states = dict()
 user_photos = dict()
+
+
+async def handle(request):
+    if request.match_info.get('token') == bot.token:
+        request_body_dict = await request.json()
+        update = telebot.types.Update.de_json(request_body_dict)
+        bot.process_new_updates([update])
+        return web.Response()
+    else:
+        return web.Response(status=403)
+
+
+app.router.add_post('/{token}/', handle)
 
 
 @bot.message_handler(commands=['start', 'help'])
@@ -80,6 +107,21 @@ def send_doc(chat_id, doc_path):
         bot.send_document(chat_id, doc)
 
 
-# bot.delete_webhook()
-# bot.set_webhook(url="https://pdf-tg-bot.herokuapp.com/")
-bot.polling()
+# Remove webhook, it fails sometimes the set if there is a previous webhook
+bot.remove_webhook()
+
+# Set webhook
+bot.set_webhook(url=WEBHOOK_URL_BASE + WEBHOOK_URL_PATH,
+                certificate=open(WEBHOOK_SSL_CERT, 'r'))
+
+# Build ssl context
+context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+context.load_cert_chain(WEBHOOK_SSL_CERT, WEBHOOK_SSL_PRIV)
+
+# Start aiohttp server
+web.run_app(
+    app,
+    host=WEBHOOK_LISTEN,
+    port=WEBHOOK_PORT,
+    ssl_context=context,
+)
