@@ -26,7 +26,6 @@ bot = telebot.TeleBot(TOKEN, parse_mode=None)
 user_states = dict()
 user_photos = dict()
 
-
 async def handle(request):
     if request.match_info.get('token') == bot.token:
         request_body_dict = await request.json()
